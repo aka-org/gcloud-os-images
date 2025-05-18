@@ -1,0 +1,52 @@
+name: Build OS Image 
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      build-version:
+        required: true
+        type: string
+      working-directory:
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04 
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    environment: ${{ inputs.environment }}
+    env:
+      PKR_VAR_project_id: ${{ secrets.PROJECT_ID }}
+      PKR_VAR_build_version: ${{ inputs.build-version }} 
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Packer 
+        uses: hashicorp/setup-packer@v2
+        with:
+          version: 1.12.0 
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@2.1.10
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SA }}
+
+      - name: Packer Init
+        run: packer init . 
+
+      - name: Check Packer Formatting
+        run: packer fmt -check -recursive .
+
+      - name: Validate Packer Configuration
+        run:  packer validate .
+
+      - name: Packer Build
+        run: packer build --force . 

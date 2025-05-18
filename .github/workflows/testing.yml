@@ -1,0 +1,50 @@
+name: Build OS Images for Testing Environment
+
+on:
+  push:
+    branches:
+      - 'feature/**' 
+    paths:
+      - 'images/**'
+      - 'shared-scripts/**'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  filter_images:
+    runs-on: ubuntu-22.04 
+    outputs:
+      kubernetes_node: ${{ steps.filter.outputs.kubernetes_node }}
+      load_balancer: ${{ steps.filter.outputs.load_balancer }}
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - uses: dorny/paths-filter@v3.0.2
+        id: filter
+        with:
+          filters: |
+            kubernetes_node:
+              - 'images/kubernetes_node/**'
+              - 'shared_scripts/**'
+            load_balancer:
+              - 'images/load_balancer/**'
+              - 'shared_scripts/**'
+
+  kubernetes_node:
+    needs: filter_images
+    if: needs.filter_images.outputs.kubernetes_node == 'true'
+    uses: ./.github/workflows/build-os-image.yml
+    with:
+      environment: testing
+      working-directory: images/kubernetes_node
+      build-version: build${{ github.run_number }}
+  load_balancer:
+    needs: filter_images
+    if: needs.filter_images.outputs.load_balancer == 'true'
+    uses: ./.github/workflows/build-os-image.yml
+    with:
+      environment: testing
+      working-directory: images/load_balancer
+      build-version: build${{ github.run_number }}

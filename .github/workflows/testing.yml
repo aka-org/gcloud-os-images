@@ -40,6 +40,7 @@ jobs:
       environment: testing
       working-directory: images/kubernetes_node
       build-version: build${{ github.run_number }}
+    secrets: inherit
   load_balancer:
     needs: filter_images
     if: needs.filter_images.outputs.load_balancer == 'true'
@@ -48,3 +49,4 @@ jobs:
       environment: testing
       working-directory: images/load_balancer
       build-version: build${{ github.run_number }}
+    secrets: inherit

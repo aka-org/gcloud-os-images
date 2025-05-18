@@ -38,3 +38,15 @@ jobs:
         with:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
           service_account: ${{ secrets.WIF_SA }}
+
+      - name: Packer Init
+        run: packer init . 
+
+      - name: Check Packer Formatting
+        run: packer fmt -check -recursive .
+
+      - name: Validate Packer Configuration
+        run:  packer validate .
+
+      - name: Packer Build
+        run: packer build --force . 

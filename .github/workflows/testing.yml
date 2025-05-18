@@ -6,7 +6,7 @@ on:
       - 'feature/**' 
     paths:
       - 'images/**'
-      - 'shared-scripts/**'
+      - 'shared_scripts/**'
 
 permissions:
   id-token: write

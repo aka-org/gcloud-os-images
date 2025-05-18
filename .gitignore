@@ -14,3 +14,10 @@ crash.log
 
 # For built boxes
 *.box
+
+# Editor/IDE-specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store

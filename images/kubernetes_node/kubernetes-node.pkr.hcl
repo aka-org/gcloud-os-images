@@ -26,7 +26,7 @@ variable "image_family" {
 
 variable "base_version" {
   type    = string
-  default = "1.0.0"
+  default = "0.1.0"
 }
 variable "subnetwork" {
   type    = string

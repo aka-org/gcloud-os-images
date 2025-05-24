@@ -76,29 +76,29 @@ build {
     script          = "scripts/setup-kubernetes.sh"
     execute_command = "sudo bash '{{.Path}}'"
   }
-  
+
   provisioner "file" {
-    source = "config/kubeadm-init-ha.yaml"
+    source      = "config/kubeadm-init-ha.yaml"
     destination = "/tmp/kubeadm-init-ha.yaml"
   }
 
   provisioner "file" {
-    source = "config/kubeadm-init.yaml"
+    source      = "config/kubeadm-init.yaml"
     destination = "/tmp/kubeadm-init.yaml"
   }
 
   provisioner "file" {
-    source = "config/master-join.yaml"
+    source      = "config/master-join.yaml"
     destination = "/tmp/master-join.yaml"
   }
 
   provisioner "file" {
-    source = "config/worker-join.yaml"
+    source      = "config/worker-join.yaml"
     destination = "/tmp/worker-join.yaml"
   }
 
   provisioner "file" {
-    source = "config/init-kubernetes.sh"
+    source      = "config/init-kubernetes.sh"
     destination = "/tmp/init-kubernetes.sh"
   }
 

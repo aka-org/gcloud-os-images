@@ -98,7 +98,7 @@ build {
   }
 
   provisioner "file" {
-    source      = "config/init-kubernetes.sh"
+    source      = "scripts/init-kubernetes.sh"
     destination = "/tmp/init-kubernetes.sh"
   }
 

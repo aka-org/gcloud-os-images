@@ -142,8 +142,9 @@ init_cluster() {
     init_output=$(kubeadm init --config $CONFIG 2>&1)
 
     # Store kuebernetes token and hash in gcloud secret
-    set_kubernetes_secret $init_output
-
+    set_kubernetes_secret "$init_output"
+ 
+    echo "Applying Calico CNI"
     # Export kubeconfig file path
     export KUBECONFIG=/etc/kubernetes/admin.conf
 

@@ -89,9 +89,8 @@ get_lb_ips() {
         # Set to empty string if the result is empty or null
         lb_ips="${lb_ips:-""}"
     done
-    lb_ips="$(echo $lb_ips | head -n 1),$(echo $lb_ips | tail -n 1)"
-    LB1="$(echo $lb_ips | head -n 1)"
-    LB2="$(echo $lb_ips | tail -n 1)"
+    # Read the lines into variables
+    read -r LB1 LB2 <<< "$lb_ips"
     sed -i "s|{{LB1}}|$LB1|g" $CONFIG
     sed -i "s|{{LB2}}|$LB2|g" $CONFIG
 }
@@ -123,7 +122,7 @@ init_cluster() {
 	check_lbs
     fi
     # replace placeholders in kubeadm manifests
-    sed -i "s|{{HOST_IP}}|$HOST_I|g" $CONFIG
+    sed -i "s|{{HOST_IP}}|$HOST_IP|g" $CONFIG
     sed -i "s|{{CONTROLPLANE_ENDPOINT}}|$CONTROLPLANE_ENDPOINT|g" $CONFIG
     sed -i "s|{{CLUSTER_NAME}}|$CLUSTER_NAME|g" $CONFIG
 

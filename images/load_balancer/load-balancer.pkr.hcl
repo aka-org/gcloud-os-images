@@ -9,12 +9,14 @@ packer {
 
 variable "project_id" {
   type    = string
-  default = "default"
+}
+
+variable "env" {
+  type    = string
 }
 
 variable "build_version" {
   type    = string
-  default = "build1"
 }
 
 variable "zone" {
@@ -29,7 +31,7 @@ variable "image_family" {
 
 variable "base_version" {
   type    = string
-  default = "0.1.0"
+  default = "0.2.0"
 }
 
 variable "subnetwork" {
@@ -64,6 +66,7 @@ source "googlecompute" "debian" {
 
   image_labels = {
     version    = local.image_version
+    env        = var.env
     created_by = "packer"
   }
 }

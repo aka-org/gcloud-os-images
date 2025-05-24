@@ -31,33 +31,38 @@ HOST_IP=$(curl -s -H "Metadata-Flavor: Google" "$METADATA_ENDPOINT/network-inter
 check_lbs() {
     local lb_status=""
     while [ -z "$lb_status" ]; do
-        echo "Waiting for load balancers..."
+        echo "Check status of load balancers..."
 	sleep 10
         lb_status="$(curl http://$CONTROLPLANE_ENDPOINT:8081/health 2>/dev/null)"
         lb_status="${lb_status:-""}"
     done
+    echo "Load Balancer OK"
 }
 
 set_kubernetes_secret() {
     local init_output="$1"
     local token=""
     local hash=""
+    echo "Storing kubernetes token and hash in secret $KUBERNETES_SECRET."
     # Extract token and hash
     token=$(echo "$init_output" | grep -oP '(?<=--token )\S+')
     hash=$(echo "$init_output" | grep -oP '(?<=--discovery-token-ca-cert-hash sha256:)\S+')
 
     # Combine and push to Secret Manager
     echo -n "${token}:${hash}" | gcloud secrets versions add $KUBERNETES_SECRET --data-file=-
+    echo "Secret $KUBERNETES_SECRET updated."
 }
 
 get_kubernetes_secret() {
     local secret
     # Retrieve token and hash from GCP Secret Manager
+    echo "Fetching kubernetes token and hash from secret $KUBERNETES_SECRET."
     secret=$(gcloud secrets versions access latest --secret="$KUBERNETES_SECRET")
     TOKEN=$(echo "$secret" | cut -d':' -f1)
     HASH=$(echo "$secret" | cut -d':' -f2)
     sed -i "s|{{TOKEN}}|$TOKEN|g" $CONFIG
     sed -i "s|{{HASH}}|$HASH|g" $CONFIG
+    echo "Secret $KUBERNETES_SECRET fetched."
 }
 
 get_master_ip() {
@@ -74,6 +79,7 @@ get_master_ip() {
         master_ip="${master_ip:-""}"
     done
     CONTROLPLANE_ENDPOINT="$master_ip"
+    echo "Control plane IP is $CONTROLPLANE_ENDPOINT"
 }
 
 get_lb_ips() {
@@ -90,12 +96,16 @@ get_lb_ips() {
         lb_ips="${lb_ips:-""}"
     done
     # Read the lines into variables
-    read -r LB1 LB2 <<< "$lb_ips"
+    mapfile -t LB_ARRAY <<< "$lb_ips"
+    LB1="${LB_ARRAY[0]}"
+    LB2="${LB_ARRAY[1]}"
     sed -i "s|{{LB1}}|$LB1|g" $CONFIG
     sed -i "s|{{LB2}}|$LB2|g" $CONFIG
+    echo "Load Balancer IPs are $LB1 and $LB2"
 }
 
 join_cluster() {
+    echo "Joining node $(hostname) to the $CLUSTER_NAME"
     if [ $HA_ENABLED == "true" ]; then
         get_lb_ips
 	check_lbs
@@ -109,14 +119,16 @@ join_cluster() {
     sed -i "s|{{CONTROLPLANE_ENDPOINT}}|$CONTROLPLANE_ENDPOINT|g" $CONFIG
     
     # Sleep a while before joining
-    sleep 45
+    sleep 15
     kubeadm join --config $CONFIG
+    echo "Node $(hostname) joined the $CLUSTER_NAME"
 }
 
 
 init_cluster() {
     local init_output=""
     
+    echo "Initializing Kubernetes Cluster $CLUSTER_NAME."
     if [ $HA_ENABLED == "true" ]; then
         get_lb_ips
 	check_lbs
@@ -138,6 +150,7 @@ init_cluster() {
     # Install CNI operator and Calico
     kubectl create -f $CALICO_OPERATOR
     kubectl create -f $CALICO_RESOURCES
+    echo "Kubernetes Cluster $CLUSTER_NAME initialized."
 }
 
 if [ $LB_VIP != "null" ]; then
@@ -152,16 +165,13 @@ if [[ "$ROLE" == "$MASTER_ROLE" && $INIT_CLUSTER == "true" ]]; then
         CONFIG="/etc/kubeadm/kubeadm-init.yaml"
 	CONTROLPLANE_ENDPOINT="$HOST_IP"
     fi
-    echo "Initializing Kubernetes Cluster $CLUSTER_NAME."
     init_cluster
 elif [[ "$ROLE" == "$MASTER_ROLE" && $INIT_CLUSTER != "true" ]]; then
     CONFIG="/etc/kubeadm/master-join.yaml"
     join_cluster
-    echo "Master node $(hostname) joined the $CLUSTER_NAME"
 elif [[ "$ROLE" == "$WORKER_ROLE" ]]; then
     CONFIG="/etc/kubeadm/worker-join.yaml"
     join_cluster
-    echo "Worker node $(hostname) joined the $CLUSTER_NAME"
 else
     echo "Role $ROLE is invalid"
     exit 1

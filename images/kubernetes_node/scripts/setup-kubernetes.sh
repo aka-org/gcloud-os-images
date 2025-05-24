@@ -68,3 +68,5 @@ systemctl enable kubelet
 
 swapoff -a
 sed -i.bak '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+
+mkdir -p /etc/kubeadm

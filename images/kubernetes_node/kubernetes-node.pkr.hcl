@@ -76,6 +76,51 @@ build {
     script          = "scripts/setup-kubernetes.sh"
     execute_command = "sudo bash '{{.Path}}'"
   }
+  
+  provisioner "file" {
+    source = "config/kubeadm-init-ha.yaml"
+    destination = "/tmp/kubeadm-init-ha.yaml"
+  }
+
+  provisioner "file" {
+    source = "config/kubeadm-init.yaml"
+    destination = "/tmp/kubeadm-init.yaml"
+  }
+
+  provisioner "file" {
+    source = "config/master-join.yaml"
+    destination = "/tmp/master-join.yaml"
+  }
+
+  provisioner "file" {
+    source = "config/worker-join.yaml"
+    destination = "/tmp/worker-join.yaml"
+  }
+
+  provisioner "file" {
+    source = "config/init-kubernetes.sh"
+    destination = "/tmp/init-kubernetes.sh"
+  }
+
+  provisioner "shell" {
+    inline = [
+      "sudo mv /tmp/kubeadm-init-ha.yaml /etc/kubeadm/kubeadm-init-ha.yaml",
+      "sudo chmod 660 /etc/kubeadm/kubeadm-init-ha.yaml",
+      "sudo chown root:root /etc/kubeadm/kubeadm-init-ha.yaml",
+      "sudo mv /tmp/kubeadm-init.yaml /etc/kubeadm/kubeadm-init.yaml",
+      "sudo chmod 660 /etc/kubeadm/kubeadm-init.yaml",
+      "sudo chown root:root /etc/kubeadm/kubeadm-init.yaml",
+      "sudo mv /tmp/master-join.yaml /etc/kubeadm/master-join.yaml",
+      "sudo chmod 660 /etc/kubeadm/master-join.yaml",
+      "sudo chown root:root /etc/kubeadm/master-join.yaml",
+      "sudo mv /tmp/worker-join.yaml /etc/kubeadm/worker-join.yaml",
+      "sudo chmod 660 /etc/kubeadm/worker-join.yaml",
+      "sudo chown root:root /etc/kubeadm/worker-join.yaml",
+      "sudo mv /tmp/init-kubernetes.sh /usr/local/bin/init-kubernetes.sh",
+      "sudo chmod 550 /usr/local/bin/init-kubernetes.sh",
+      "sudo chown root:root /usr/local/bin/init-kubernetes.sh"
+    ]
+  }
 
   provisioner "shell" {
     script          = "../../shared_scripts/cleanup.sh"

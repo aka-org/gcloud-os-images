@@ -100,6 +100,11 @@ build {
   }
 
   provisioner "file" {
+    source      = "scripts/init-haproxy.sh"
+    destination = "/tmp/init-haproxy.sh"
+  }
+
+  provisioner "file" {
     source      = "scripts/takeover.sh"
     destination = "/tmp/takeover.sh"
   }
@@ -115,6 +120,9 @@ build {
       "sudo mv /tmp/init-keepalived.sh /usr/local/bin/init-keepalived.sh",
       "sudo chmod 550 /usr/local/bin/init-keepalived.sh",
       "sudo chown root:root /usr/local/bin/init-keepalived.sh",
+      "sudo mv /tmp/init-haproxy.sh /usr/local/bin/init-haproxy.sh",
+      "sudo chmod 550 /usr/local/bin/init-haproxy.sh",
+      "sudo chown root:root /usr/local/bin/init-haproxy.sh",
       "sudo mv /tmp/takeover.sh /usr/local/bin/takeover.sh",
       "sudo chmod 550 /usr/local/bin/takeover.sh",
       "sudo chown root:root /usr/local/bin/takeover.sh"

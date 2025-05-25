@@ -54,10 +54,14 @@ set_kubernetes_secret() {
 }
 
 get_kubernetes_secret() {
-    local secret
+    local secret=""
     # Retrieve token and hash from GCP Secret Manager
-    echo "Fetching kubernetes token and hash from secret $KUBERNETES_SECRET."
-    secret=$(gcloud secrets versions access latest --secret="$KUBERNETES_SECRET")
+    while [ -z "$secret" ]; do
+        echo "Fetching kubernetes token and hash from secret $KUBERNETES_SECRET..."
+        sleep 10
+        secret=$(gcloud secrets versions access latest --secret="$KUBERNETES_SECRET" 2>/dev/null)
+	secret="${secret:-""}"
+    done
     TOKEN=$(echo "$secret" | cut -d':' -f1)
     HASH=$(echo "$secret" | cut -d':' -f2)
     sed -i "s|{{TOKEN}}|$TOKEN|g" $CONFIG
@@ -118,8 +122,6 @@ join_cluster() {
     sed -i "s|{{HOST_IP}}|$HOST_IP|g" $CONFIG
     sed -i "s|{{CONTROLPLANE_ENDPOINT}}|$CONTROLPLANE_ENDPOINT|g" $CONFIG
     
-    # Sleep a while before joining
-    sleep 15
     kubeadm join --config $CONFIG
     echo "Node $(hostname) joined the $CLUSTER_NAME"
 }

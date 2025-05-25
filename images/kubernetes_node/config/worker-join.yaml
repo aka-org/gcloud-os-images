@@ -9,6 +9,3 @@ discovery:
 nodeRegistration:
   criSocket: "unix:///var/run/containerd/containerd.sock"
   imagePullPolicy: IfNotPresent
-  kubeletExtraArgs:
-    - name: node-labels
-      value: "node-role.kubernetes.io/worker="

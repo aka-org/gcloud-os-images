@@ -48,7 +48,7 @@ source "googlecompute" "debian" {
   source_image            = "debian-12-bookworm-v20250415"
   source_image_project_id = ["debian-cloud"]
   zone                    = var.zone
-  machine_type            = "e2-micro"
+  machine_type            = "e2-medium"
   disk_size               = 10
   image_name              = local.image_name
   image_family            = var.image_family

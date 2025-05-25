@@ -1,18 +1,36 @@
 #!/bin/bash
 
-ENV="$1"
-ROLE="$2"
+# Label filters (allow override or use positional args)
+VERSION="${1:-}"
+ENV="${2:-testing}"
+ROLE="${3:-kubernetes-master}"
 
-# Discover the control-plane IPs
-MASTER_IPS=""
-while [ -z "$MASTER_IPS" ]; do
-    echo "Waiting for control plane IPs..."
-    sleep 5
-    MASTER_IP=$(gcloud compute instances list \
-      --filter="labels.env=${filter-env} AND labels.role=${filter-role}" \
-      --format="value(networkInterfaces[0].networkIP)" 2>/dev/null | head -n 1)
+HAPROXY_CONFIG="/etc/haproxy/haproxy.cfg"
 
-    # Set to empty string if the result is empty or null
-    MASTER_IP="$${MASTER_IP:-""}"
+# Wait until at least one master node is discoverable
+while true; do
+    sleep 20
+    echo "Discovering control plane nodes..."
+    INSTANCES=$(gcloud compute instances list \
+      --filter="labels.env=$ENV AND labels.version=$VERSION AND labels.role=$ROLE" \
+      --format="table(name, networkInterfaces[0].networkIP)" 2>/dev/null)
+
+    COUNT=$(echo "$INSTANCES" | tail -n +2 | wc -l)
+
+    if [[ "$COUNT" -ge 1 ]]; then
+        echo "Found $COUNT instances:"
+        echo "$INSTANCES"
+        break
+    fi
 done
+
+# Append discovered nodes as HAProxy servers
+echo "$INSTANCES" | tail -n +2 | while read -r NAME IP; do
+    echo "  server ${NAME} ${IP}:6443 check" >> $HAPROXY_CONFIG
+done
+
+# Restart HAProxy to apply the config
+echo "Restarting HAProxy..."
 systemctl enable --now haproxy
+
+echo "HAProxy is configured and running."

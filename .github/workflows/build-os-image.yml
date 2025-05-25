@@ -23,6 +23,7 @@ jobs:
     env:
       PKR_VAR_project_id: ${{ secrets.PROJECT_ID }}
       PKR_VAR_build_version: ${{ inputs.build-version }} 
+      PKR_VAR_env: ${{ inputs.environment }} 
 
     steps:
       - name: Checkout repo

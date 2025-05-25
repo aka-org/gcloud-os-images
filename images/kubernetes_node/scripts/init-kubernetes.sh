@@ -46,8 +46,8 @@ set_kubernetes_secret() {
     local secret_value=""
     echo "Storing kubernetes token and hash in secret $KUBERNETES_SECRET..."
     # Extract token and hash
-    token=$(echo "$init_output" | grep -oP '(?<=--token )\S+')
-    hash=$(echo "$init_output" | grep -oP '(?<=--discovery-token-ca-cert-hash sha256:)\S+')
+    token=$(echo "$init_output" | grep -oP '(?<=--token )\S+'| head -n1)
+    hash=$(echo "$init_output" | grep -oP '(?<=--discovery-token-ca-cert-hash sha256:)\S+'| head -n1)
 
     # Compose secret value
     secret_value="${token}:${hash}"
@@ -155,6 +155,7 @@ init_cluster() {
 
     # Install CNI operator and Calico
     kubectl create -f $CALICO_OPERATOR
+    kubectl wait --for=condition=Established crd/installations.operator.tigera.io --timeout=60s
     kubectl create -f $CALICO_RESOURCES
     echo "Kubernetes Cluster $CLUSTER_NAME initialized."
 }

@@ -151,7 +151,7 @@ join_master() {
     sed -i "s|{{HOST_IP}}|$HOST_IP|g" $CONFIG
     sed -i "s|{{CONTROLPLANE_ENDPOINT}}|$CONTROLPLANE_ENDPOINT|g" $CONFIG
 
-    kubeadm join phase control-plane-prepare download-certs $CONTROL_PLANE_ENDPOINT:6443 --config $CONFIG
+    kubeadm join phase control-plane-prepare download-certs $CONTROLPLANE_ENDPOINT:6443 --config $CONFIG
     kubeadm join --config $CONFIG
     echo "Node $(hostname) joined the $CLUSTER_NAME."
 }

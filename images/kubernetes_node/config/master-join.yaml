@@ -10,6 +10,7 @@ controlPlane:
   localAPIEndpoint:
     advertiseAddress: "{{HOST_IP}}"
     bindPort: 6443
+  certificateKey: "{{CERT_KEY}}"
 nodeRegistration:
   criSocket: "unix:///var/run/containerd/containerd.sock"
   imagePullPolicy: IfNotPresent

@@ -31,25 +31,28 @@ HOST_IP=$(curl -s -H "Metadata-Flavor: Google" "$METADATA_ENDPOINT/network-inter
 check_lbs() {
     local lb_status=""
     while [ -z "$lb_status" ]; do
-        echo "Check status of load balancers..."
+        echo "Checking status of load balancers..."
 	sleep 10
         lb_status="$(curl http://$CONTROLPLANE_ENDPOINT:8081/health 2>/dev/null)"
         lb_status="${lb_status:-""}"
     done
-    echo "Load Balancer OK"
+    echo "Load Balancers are OK."
 }
 
 set_kubernetes_secret() {
     local init_output="$1"
     local token=""
     local hash=""
-    echo "Storing kubernetes token and hash in secret $KUBERNETES_SECRET."
+    local secret_value=""
+    echo "Storing kubernetes token and hash in secret $KUBERNETES_SECRET..."
     # Extract token and hash
     token=$(echo "$init_output" | grep -oP '(?<=--token )\S+')
     hash=$(echo "$init_output" | grep -oP '(?<=--discovery-token-ca-cert-hash sha256:)\S+')
 
+    # Compose secret value
+    secret_value="${token}:${hash}"
     # Combine and push to Secret Manager
-    echo -n "${token}:${hash}" | gcloud secrets versions add $KUBERNETES_SECRET --data-file=-
+    printf "%s" "$secret_value" | gcloud secrets versions add $KUBERNETES_SECRET --data-file=-
     echo "Secret $KUBERNETES_SECRET updated."
 }
 
@@ -83,7 +86,7 @@ get_master_ip() {
         master_ip="${master_ip:-""}"
     done
     CONTROLPLANE_ENDPOINT="$master_ip"
-    echo "Control plane IP is $CONTROLPLANE_ENDPOINT"
+    echo "Control plane IP is $CONTROLPLANE_ENDPOINT."
 }
 
 get_lb_ips() {
@@ -105,11 +108,11 @@ get_lb_ips() {
     LB2="${LB_ARRAY[1]}"
     sed -i "s|{{LB1}}|$LB1|g" $CONFIG
     sed -i "s|{{LB2}}|$LB2|g" $CONFIG
-    echo "Load Balancer IPs are $LB1 and $LB2"
+    echo "Load Balancer IPs are $LB1 and $LB2."
 }
 
 join_cluster() {
-    echo "Joining node $(hostname) to the $CLUSTER_NAME"
+    echo "Joining node $(hostname) to the $CLUSTER_NAME..."
     if [ $HA_ENABLED == "true" ]; then
         get_lb_ips
 	check_lbs
@@ -123,14 +126,14 @@ join_cluster() {
     sed -i "s|{{CONTROLPLANE_ENDPOINT}}|$CONTROLPLANE_ENDPOINT|g" $CONFIG
     
     kubeadm join --config $CONFIG
-    echo "Node $(hostname) joined the $CLUSTER_NAME"
+    echo "Node $(hostname) joined the $CLUSTER_NAME."
 }
 
 
 init_cluster() {
     local init_output=""
     
-    echo "Initializing Kubernetes Cluster $CLUSTER_NAME."
+    echo "Initializing Kubernetes Cluster $CLUSTER_NAME..."
     if [ $HA_ENABLED == "true" ]; then
         get_lb_ips
 	check_lbs
@@ -146,7 +149,7 @@ init_cluster() {
     # Store kuebernetes token and hash in gcloud secret
     set_kubernetes_secret "$init_output"
  
-    echo "Applying Calico CNI"
+    echo "Applying Calico CNI..."
     # Export kubeconfig file path
     export KUBECONFIG=/etc/kubernetes/admin.conf
 
@@ -176,6 +179,6 @@ elif [[ "$ROLE" == "$WORKER_ROLE" ]]; then
     CONFIG="/etc/kubeadm/worker-join.yaml"
     join_cluster
 else
-    echo "Role $ROLE is invalid"
+    echo "Role $ROLE is invalid."
     exit 1
 fi

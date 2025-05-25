@@ -8,13 +8,15 @@ packer {
 }
 
 variable "project_id" {
-  type    = string
-  default = "default"
+  type = string
+}
+
+variable "env" {
+  type = string
 }
 
 variable "build_version" {
-  type    = string
-  default = "build1"
+  type = string
 }
 
 variable "zone" {
@@ -29,7 +31,7 @@ variable "image_family" {
 
 variable "base_version" {
   type    = string
-  default = "0.1.0"
+  default = "0.2.0"
 }
 
 variable "subnetwork" {
@@ -52,7 +54,7 @@ source "googlecompute" "debian" {
   source_image            = "debian-12-bookworm-v20250415"
   source_image_project_id = ["debian-cloud"]
   zone                    = var.zone
-  machine_type            = "e2-micro"
+  machine_type            = "e2-medium"
   disk_size               = 10
   image_name              = local.image_name
   image_family            = var.image_family
@@ -64,6 +66,7 @@ source "googlecompute" "debian" {
 
   image_labels = {
     version    = local.image_version
+    env        = var.env
     created_by = "packer"
   }
 }
@@ -97,6 +100,11 @@ build {
   }
 
   provisioner "file" {
+    source      = "scripts/init-haproxy.sh"
+    destination = "/tmp/init-haproxy.sh"
+  }
+
+  provisioner "file" {
     source      = "scripts/takeover.sh"
     destination = "/tmp/takeover.sh"
   }
@@ -112,6 +120,9 @@ build {
       "sudo mv /tmp/init-keepalived.sh /usr/local/bin/init-keepalived.sh",
       "sudo chmod 550 /usr/local/bin/init-keepalived.sh",
       "sudo chown root:root /usr/local/bin/init-keepalived.sh",
+      "sudo mv /tmp/init-haproxy.sh /usr/local/bin/init-haproxy.sh",
+      "sudo chmod 550 /usr/local/bin/init-haproxy.sh",
+      "sudo chown root:root /usr/local/bin/init-haproxy.sh",
       "sudo mv /tmp/takeover.sh /usr/local/bin/takeover.sh",
       "sudo chmod 550 /usr/local/bin/takeover.sh",
       "sudo chown root:root /usr/local/bin/takeover.sh"

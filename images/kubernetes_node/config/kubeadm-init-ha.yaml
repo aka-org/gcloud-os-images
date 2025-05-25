@@ -1,0 +1,30 @@
+apiVersion: kubeadm.k8s.io/v1beta4
+kind: ClusterConfiguration
+kubernetesVersion: "v1.32.0"
+clusterName: "{{CLUSTER_NAME}}"
+controlPlaneEndpoint: "{{CONTROLPLANE_ENDPOINT}}:6443"
+networking:
+  serviceSubnet: "10.96.0.0/12"
+  podSubnet: "192.168.0.0/16"
+  dnsDomain: "cluster.local"
+apiServer:
+  certSANs:
+    - "{{CONTROLPLANE_ENDPOINT}}"
+    - "{{LB1}}"
+    - "{{LB2}}"
+etcd:
+  local:
+    dataDir: /var/lib/etcd
+---
+apiVersion: kubeadm.k8s.io/v1beta4
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: "{{HOST_IP}}"
+  bindPort: 6443
+nodeRegistration:
+  criSocket: "unix:///var/run/containerd/containerd.sock"
+  imagePullPolicy: IfNotPresent
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: systemd

@@ -70,3 +70,7 @@ swapoff -a
 sed -i.bak '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 
 mkdir -p /etc/kubeadm
+
+# Create storage path on node
+sudo mkdir -p /opt/local-path-provisioner
+sudo chmod 777 /opt/local-path-provisioner

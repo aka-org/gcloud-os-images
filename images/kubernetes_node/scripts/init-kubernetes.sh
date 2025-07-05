@@ -16,7 +16,8 @@ MASTER_ROLE="kubernetes-master"
 LB_ROLE="kubernetes-lb"
 WORKER_ROLE="kubernetes-worker"
 CALICO_OPERATOR="https://raw.githubusercontent.com/projectcalico/calico/v3.29.3/manifests/tigera-operator.yaml"
-CALICO_RESOURCES="https://raw.githubusercontent.com/projectcalico/calico/v3.29.3/manifests/custom-resources.yaml"
+CALICO_RESOURCES="/etc/kubeadm/calico-custom.yaml"
+LOCAL_PATH_PROVISIONER="https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.31/deploy/local-path-storage.yaml"
 
 HA_ENABLED="false"
 CONTROLPLANE_ENDPOINT=""
@@ -205,6 +206,9 @@ init_cluster() {
     kubectl create -f $CALICO_OPERATOR
     kubectl wait --for=condition=Established crd/installations.operator.tigera.io --timeout=60s
     kubectl create -f $CALICO_RESOURCES
+
+    # Install local path provisioner
+    kubectl create -f $LOCAL_PATH_PROVISIONER
     echo "Kubernetes Cluster $CLUSTER_NAME initialized."
 }
 

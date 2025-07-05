@@ -26,7 +26,7 @@ variable "image_family" {
 
 variable "base_version" {
   type    = string
-  default = "0.1.0"
+  default = "0.2.0"
 }
 variable "subnetwork" {
   type    = string
@@ -102,6 +102,11 @@ build {
     destination = "/tmp/init-kubernetes.sh"
   }
 
+  provisioner "file" {
+    source      = "config/calico-custom.yaml"
+    destination = "/tmp/calico-custom.yaml"
+  }
+
   provisioner "shell" {
     inline = [
       "sudo mv /tmp/kubeadm-init-ha.yaml /etc/kubeadm/kubeadm-init-ha.yaml",
@@ -110,6 +115,9 @@ build {
       "sudo mv /tmp/kubeadm-init.yaml /etc/kubeadm/kubeadm-init.yaml",
       "sudo chmod 660 /etc/kubeadm/kubeadm-init.yaml",
       "sudo chown root:root /etc/kubeadm/kubeadm-init.yaml",
+      "sudo mv /tmp/calico-custom.yaml /etc/kubeadm/calico-custom.yaml",
+      "sudo chmod 660 /etc/kubeadm/calico-custom.yaml",
+      "sudo chown root:root /etc/kubeadm/calico-custom.yaml",
       "sudo mv /tmp/master-join.yaml /etc/kubeadm/master-join.yaml",
       "sudo chmod 660 /etc/kubeadm/master-join.yaml",
       "sudo chown root:root /etc/kubeadm/master-join.yaml",
